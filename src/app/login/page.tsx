@@ -26,13 +26,13 @@ const CSS = `
 .lp-field{margin-bottom:20px}
 .lp-field label{display:block;font-size:15px;color:#9BA0AC;letter-spacing:.4px;margin-bottom:8px}
 .lp-iwrap{position:relative}
-.lp-iwrap svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#82889A;pointer-events:none}
+.lp-iwrap .lp-input-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#9BA0AC;pointer-events:none}
 .lp-iwrap input{width:100%;box-sizing:border-box;background:#121417;border:1px solid #2E3238;border-radius:10px;padding:14px 44px 14px 48px;font-size:18px;color:#ECEDEE;outline:none;font-family:inherit;transition:border-color .12s}
 .lp-iwrap input.pw-input{padding-right:48px}
 .lp-iwrap input::placeholder{color:#82889A}
 .lp-iwrap input:focus{border-color:#6C9BFF}
 .lp-iwrap input.err{border-color:#F0555C}
-.lp-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#9BA0AC;background:none;border:none;cursor:pointer;padding:4px;display:flex}
+.lp-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#9BA0AC;background:none;border:none;cursor:pointer;padding:6px;display:flex;line-height:0}
 .lp-toggle:hover{color:#B0B5C0}
 .lp-submit{width:100%;padding:14px;border-radius:10px;border:1px solid #6C9BFF;background:#6C9BFF;color:#0A0B0D;font-size:18px;font-weight:500;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:11px;transition:opacity .12s}
 .lp-submit:hover{opacity:.9}
@@ -114,7 +114,7 @@ export default function LoginPage() {
             <div className="lp-field">
               <label>Username</label>
               <div className="lp-iwrap">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <svg className="lp-input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 <input
                   autoFocus
                   type="text"
@@ -131,7 +131,7 @@ export default function LoginPage() {
             <div className="lp-field">
               <label>Password</label>
               <div className="lp-iwrap">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <svg className="lp-input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                 <input
                   type={showPw ? "text" : "password"}
                   className={`pw-input${error ? " err" : ""}`}
