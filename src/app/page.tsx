@@ -124,6 +124,27 @@ const CSS = `
 .log-danger{color:#F0555C}
 .log-info{color:#A8ADB8}
 .log-warn{color:#E8A33D}
+
+/* Uploader modal */
+.uploader-dropzone{border:2px dashed #2E3238;border-radius:11px;padding:28px 22px;text-align:center;margin:14px 0;transition:border-color .12s,background .12s;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer}
+.uploader-dropzone.drag-active{border-color:#6C9BFF;background:rgba(108,155,255,.07)}
+.uploader-dropzone .dz-icon{margin-bottom:4px}
+.uploader-dropzone .dz-title{font-size:17px;color:#A8ADB8}
+.uploader-dropzone .dz-sub{font-size:14px;color:#82889A}
+.uploader-files{max-height:224px;overflow:auto;width:100%;text-align:left;margin-top:6px}
+.uploader-files::-webkit-scrollbar{width:5px}
+.uploader-files::-webkit-scrollbar-thumb{background:#2E3238;border-radius:3px}
+.uf-row{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:15px;color:#A8ADB8;border-bottom:1px solid #1A1D22}
+.uf-row .uf-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;display:flex;align-items:center;gap:8px}
+.uf-row .uf-name svg{flex-shrink:0;color:#82889A}
+.uf-row .uf-size{color:#82889A;font-family:'IBM Plex Mono',monospace;font-size:13px;white-space:nowrap}
+.uf-row .uf-remove{background:none;border:none;color:#555A62;cursor:pointer;padding:2px 4px;font-size:16px;font-family:inherit;line-height:1;border-radius:4px}
+.uf-row .uf-remove:hover{color:#F0555C;background:rgba(240,85,92,.10)}
+.uploader-dest{display:flex;align-items:center;gap:8px;font-size:15px;font-family:'IBM Plex Mono',monospace;color:#A8ADB8;background:#0A0B0D;border-radius:8px;padding:9px 14px}
+.uploader-dest .dest-label{color:#82889A;font-size:14px;margin-right:4px}
+.uploader-dest .dest-path{color:#6C9BFF}
+.m-box select{width:100%;box-sizing:border-box;background:#0A0B0D;border:1px solid #2E3238;border-radius:8px;padding:10px 14px;font-size:17px;color:#ECEDEE;outline:none;font-family:inherit;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2382889A' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px;cursor:pointer}
+.m-box select option{background:#121417;color:#ECEDEE}
 `;
 
 const S = {
@@ -258,7 +279,12 @@ export default function Home() {
   const [deleting, setDeleting] = useState(false);
   const [logs, setLogs] = useState<{ t: string; msg: string; status: string }[]>([]);
   const [logsOpen, setLogsOpen] = useState(false);
+  const [showUploader, setShowUploader] = useState(false);
+  const [uploaderEntries, setUploaderEntries] = useState<UploadEntry[]>([]);
+  const [uploaderDragOver, setUploaderDragOver] = useState(false);
+  const [uploaderContainer, setUploaderContainer] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploaderFileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   const addLog = useCallback((msg: string, status = "info") => {
@@ -330,10 +356,11 @@ export default function Home() {
     }));
   }
 
-  async function handleUpload(entries: UploadEntry[]) {
+  async function handleUpload(entries: UploadEntry[], containerOverride?: string) {
     if (entries.length === 0) return;
     setUploading(true);
     setUpPct(0);
+    const container = containerOverride || selectedContainer;
     const totalBytes = entries.reduce((s, e) => s + e.file.size, 0);
     setUpCount(`0 / ${entries.length}`);
     addLog(`Starting ${entries.length} file(s), ${formatSize(totalBytes)} total`, "info");
@@ -347,7 +374,7 @@ export default function Home() {
       setUpFile(file.name);
       setUpCount(`${i} / ${entries.length}`);
 
-      const success = await uploadOne(file, relativePath, selectedContainer, prefix, (loaded) => {
+      const success = await uploadOne(file, relativePath, container, prefix, (loaded) => {
         perFileDone[i] = loaded;
         const totalLoaded = completedBytes + loaded;
         setUpPct(totalBytes > 0 ? Math.round((totalLoaded / totalBytes) * 100) : 0);
@@ -377,6 +404,40 @@ export default function Home() {
     }
     await handleUpload(entries);
     e.target.value = "";
+  }
+
+  function handleUploaderDragOver(e: DragEvent) { e.preventDefault(); e.stopPropagation(); setUploaderDragOver(true); }
+  function handleUploaderDragLeave(e: DragEvent) { e.preventDefault(); e.stopPropagation(); setUploaderDragOver(false); }
+  async function handleUploaderDrop(e: DragEvent) {
+    e.preventDefault(); e.stopPropagation(); setUploaderDragOver(false);
+    if (e.dataTransfer?.items) {
+      const entries = await collectEntries(e.dataTransfer.items);
+      setUploaderEntries((prev) => [...prev, ...entries]);
+    }
+  }
+
+  async function handleUploaderFileInput(e: React.ChangeEvent<HTMLInputElement>) {
+    const inputFiles = e.target.files;
+    if (!inputFiles || inputFiles.length === 0) return;
+    const entries: UploadEntry[] = [];
+    for (let i = 0; i < inputFiles.length; i++) {
+      const f = inputFiles[i];
+      entries.push({ file: f, relativePath: (f as any).webkitRelativePath || f.name });
+    }
+    setUploaderEntries((prev) => [...prev, ...entries]);
+    e.target.value = "";
+  }
+
+  function removeUploaderEntry(index: number) {
+    setUploaderEntries((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  async function startUploaderUpload() {
+    if (uploaderEntries.length === 0 || uploading) return;
+    const container = uploaderContainer || selectedContainer;
+    await handleUpload(uploaderEntries, container);
+    setUploaderEntries([]);
+    setShowUploader(false);
   }
 
   function requestDeleteFile(blobName: string) {
@@ -551,7 +612,8 @@ export default function Home() {
             New folder
           </button>
           <input ref={fileInputRef} type="file" multiple onChange={handleFileInput} hidden />
-          <button className="btn pri" onClick={() => fileInputRef.current?.click()}>
+          <input ref={uploaderFileInputRef} type="file" multiple onChange={handleUploaderFileInput} hidden />
+          <button className="btn pri" onClick={() => { setUploaderContainer(selectedContainer); setUploaderEntries([]); setShowUploader(true); }}>
             <span dangerouslySetInnerHTML={{ __html: S.upload }} />
             Upload
           </button>
@@ -646,6 +708,75 @@ export default function Home() {
               <div className="m-actions">
                 <button className="btn" onClick={() => { setShowNewFolder(false); setNewFolderName(""); }}>Cancel</button>
                 <button className="btn pri" onClick={handleCreateFolder} disabled={creatingFolder || !newFolderName.trim()}>Create</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Upload modal */}
+        {showUploader && (
+          <div className="m-backdrop show" onClick={() => { if (!uploading) { setShowUploader(false); setUploaderEntries([]); } }}>
+            <div className="m-box" style={{ width: 520 }} onClick={(e) => e.stopPropagation()}>
+              <div className="m-title">
+                <span dangerouslySetInnerHTML={{ __html: S.upload }} />
+                Upload files
+              </div>
+
+              <label className="f-label">Container</label>
+              <select
+                value={uploaderContainer}
+                onChange={(e) => setUploaderContainer(e.target.value)}
+              >
+                {containers.map((c) => (
+                  <option key={c.name} value={c.name}>{c.name} {c.size > 0 ? `(${formatSize(c.size)})` : ""}</option>
+                ))}
+              </select>
+
+              <div style={{ marginTop: 14 }}>
+                <label className="f-label">Destination</label>
+                <div className="uploader-dest">
+                  <span className="dest-label">/</span>
+                  <span className="dest-path">{uploaderContainer || selectedContainer}</span>
+                  {prefix && <><span>/</span><span className="dest-path">{prefix}</span></>}
+                </div>
+              </div>
+
+              {/* Drop zone */}
+              <div
+                className={`uploader-dropzone${uploaderDragOver ? " drag-active" : ""}`}
+                onDragOver={handleUploaderDragOver}
+                onDragLeave={handleUploaderDragLeave}
+                onDrop={handleUploaderDrop}
+                onClick={() => uploaderFileInputRef.current?.click()}
+              >
+                <span className="dz-icon" dangerouslySetInnerHTML={{ __html: S.drag }} />
+                <div className="dz-title">Drag files here or click to browse</div>
+                <div className="dz-sub">Folders and subfolders are supported</div>
+              </div>
+
+              {/* File queue */}
+              {uploaderEntries.length > 0 && (
+                <div className="uploader-files">
+                  {uploaderEntries.map((entry, i) => (
+                    <div key={`${entry.relativePath || entry.file.name}-${i}`} className="uf-row">
+                      <span className="uf-name">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        {entry.relativePath || entry.file.name}
+                      </span>
+                      <span className="uf-size">{formatSize(entry.file.size)}</span>
+                      <button className="uf-remove" onClick={(e) => { e.stopPropagation(); removeUploaderEntry(i); }} disabled={uploading}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="m-actions">
+                <button className="btn" onClick={() => { setShowUploader(false); setUploaderEntries([]); }} disabled={uploading}>Cancel</button>
+                <button className="btn pri" onClick={startUploaderUpload} disabled={uploaderEntries.length === 0 || uploading}>
+                  Upload{uploaderEntries.length > 0 ? ` (${uploaderEntries.length})` : ""}
+                </button>
               </div>
             </div>
           </div>
