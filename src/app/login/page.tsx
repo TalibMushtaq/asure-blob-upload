@@ -77,7 +77,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ height: "100vh", display: "flex", fontFamily: "'IBM Plex Sans', sans-serif", fontSize: "19.6px" }}>
+    <div style={{ height: "100vh", display: "flex", fontFamily: "'IBM Plex Sans', sans-serif" }}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
 
       <div className="lp-brand-panel">
@@ -86,7 +86,7 @@ export default function LoginPage() {
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6C9BFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           <span>Blob Drive</span>
         </div>
-        <div style={{ maxWidth: 380, zIndex: 1 }}>
+        <div style={{ zIndex: 1, maxWidth: 520 }}>
           <div className="lp-eyebrow">Staff access</div>
           <div className="lp-h">Storage for the Alva&rsquo;s Education Foundation team.</div>
           <div className="lp-sub">Sign in with your staff credentials to browse, upload, and share department files.</div>
@@ -117,7 +117,7 @@ export default function LoginPage() {
                 <input
                   autoFocus
                   type="text"
-                  placeholder="admin"
+                  placeholder="Enter username"
                   value={username}
                   onChange={(e) => { setUsername(e.target.value); setError(""); }}
                   className={error ? "err" : ""}
