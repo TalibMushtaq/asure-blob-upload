@@ -17,14 +17,14 @@ const CSS = `
 .lp-meter-track{flex:1;height:4px;background:#22262B;border-radius:3px;overflow:hidden}
 .lp-meter-fill{height:100%;background:#6C9BFF;border-radius:3px}
 .lp-brand-footer{font-size:15px;color:#82889A;font-family:'IBM Plex Mono',monospace;margin-top:6px}
-.lp-form-panel{flex:1;display:flex;align-items:center;justify-content:center;padding:45px}
+.lp-form-panel{flex:1;display:flex;align-items:center;justify-content:center;padding:45px;background:#0A0B0D}
 .lp-form-box{width:100%;max-width:588px}
 .lp-title{font-size:24px;font-weight:600;color:#ECEDEE;margin-bottom:6px}
-.lp-form-sub{font-size:18px;color:#A8ADB8;margin-bottom:34px}
+.lp-form-sub{font-size:18px;color:#B0B5C0;margin-bottom:34px}
 .lp-error{display:none;align-items:center;gap:11px;background:rgba(240,85,92,.12);border:1px solid #F0555C;border-radius:10px;padding:11px 14px;font-size:17px;color:#F0555C;margin-bottom:22px}
 .lp-error.show{display:flex}
 .lp-field{margin-bottom:20px}
-.lp-field label{display:block;font-size:15px;color:#82889A;letter-spacing:.4px;margin-bottom:8px}
+.lp-field label{display:block;font-size:15px;color:#9BA0AC;letter-spacing:.4px;margin-bottom:8px}
 .lp-iwrap{position:relative}
 .lp-iwrap svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#82889A;pointer-events:none}
 .lp-iwrap input{width:100%;box-sizing:border-box;background:#121417;border:1px solid #2E3238;border-radius:10px;padding:14px 17px 14px 48px;font-size:18px;color:#ECEDEE;outline:none;font-family:inherit;transition:border-color .12s}
