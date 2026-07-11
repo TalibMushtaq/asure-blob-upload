@@ -10,8 +10,8 @@ export async function GET(req: NextRequest) {
     if (!blob) {
       return NextResponse.json({ error: "No blob name provided" }, { status: 400 });
     }
-    const maxExpiry = 525600; // 1 year max
-    const expiryMin = Math.min(expiry ? parseInt(expiry) : 1440, maxExpiry);
+    const maxExpiry = 5256000; // 10 years max
+    const expiryMin = Math.min(expiry ? parseInt(expiry) : 5256000, maxExpiry);
     const url = generateSasUrl(blob, expiryMin, container);
     return NextResponse.json({ url });
   } catch (err: any) {

@@ -481,11 +481,11 @@ export default function Home() {
   async function handleGetSasUrl(blobName: string) {
     const fullName = prefix ? prefix + blobName : blobName;
     try {
-      const res = await fetch(`/api/sas?blob=${encodeURIComponent(fullName)}&container=${encodeURIComponent(selectedContainer)}&expiry=525600`);
+      const res = await fetch(`/api/sas?blob=${encodeURIComponent(fullName)}&container=${encodeURIComponent(selectedContainer)}&expiry=5256000`);
       const data = await res.json();
       if (data.url) {
         await navigator.clipboard.writeText(data.url);
-        showToast("Link copied — expires in 1 year");
+        showToast("Link copied — expires in 10 years");
         addLog(`Generated read SAS for ${blobName}`, "ok");
       }
     } catch { showToast("Failed to get URL"); }

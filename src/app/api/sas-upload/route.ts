@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     if (!blob) {
       return NextResponse.json({ error: "No blob name provided" }, { status: 400 });
     }
-    const url = generateUploadSasUrl(blob, 60, container);
+    const url = generateUploadSasUrl(blob, 1440, container);
     return NextResponse.json({ url });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

@@ -107,7 +107,7 @@ export async function deleteFolder(prefix: string, containerName?: string) {
 
 export function generateSasUrl(
   blobName: string,
-  expiryMinutes: number = 1440,
+  expiryMinutes: number = 5256000,
   containerName?: string
 ): string {
   const container = containerName || defaultContainer;
