@@ -125,6 +125,12 @@ const CSS = `
 .log-info{color:#A8ADB8}
 .log-warn{color:#E8A33D}
 
+/* Link popover */
+.link-popover{position:fixed;z-index:70;background:#121417;border:1px solid #2E3238;border-radius:10px;padding:6px;box-shadow:0 11px 34px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:2px}
+.link-popover button{text-align:left;padding:9px 14px;border-radius:7px;border:none;background:none;color:#A8ADB8;font-size:15px;font-family:inherit;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:9px}
+.link-popover button:hover{background:#22262B;color:#ECEDEE}
+.link-popover button svg{width:17px;height:17px;flex-shrink:0}
+
 /* Uploader modal */
 .uploader-dropzone{border:2px dashed #2E3238;border-radius:11px;padding:28px 22px;text-align:center;margin:14px 0;transition:border-color .12s,background .12s;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer}
 .uploader-dropzone.drag-active{border-color:#6C9BFF;background:rgba(108,155,255,.07)}
@@ -283,6 +289,7 @@ export default function Home() {
   const [uploaderEntries, setUploaderEntries] = useState<UploadEntry[]>([]);
   const [uploaderDragOver, setUploaderDragOver] = useState(false);
   const [uploaderContainer, setUploaderContainer] = useState("");
+  const [linkPopover, setLinkPopover] = useState<{ blobName: string; fullName: string; x: number; y: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploaderFileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -478,14 +485,26 @@ export default function Home() {
     setDelConfirm(null);
   }
 
-  async function handleGetSasUrl(blobName: string) {
-    const fullName = prefix ? prefix + blobName : blobName;
+  async function handleCopyDirectUrl(blobName: string, fullName: string) {
+    try {
+      const res = await fetch(`/api/sas?blob=${encodeURIComponent(fullName)}&container=${encodeURIComponent(selectedContainer)}&expiry=5256000`);
+      const data = await res.json();
+      if (data.url) {
+        const directUrl = data.url.split("?")[0];
+        await navigator.clipboard.writeText(directUrl);
+        showToast("Direct link copied");
+        addLog(`Copied direct URL for ${blobName}`, "ok");
+      }
+    } catch { showToast("Failed to get URL"); }
+  }
+
+  async function handleCopySasUrl(blobName: string, fullName: string) {
     try {
       const res = await fetch(`/api/sas?blob=${encodeURIComponent(fullName)}&container=${encodeURIComponent(selectedContainer)}&expiry=5256000`);
       const data = await res.json();
       if (data.url) {
         await navigator.clipboard.writeText(data.url);
-        showToast("Link copied — expires in 10 years");
+        showToast("SAS link copied — expires in 10 years");
         addLog(`Generated read SAS for ${blobName}`, "ok");
       }
     } catch { showToast("Failed to get URL"); }
@@ -656,7 +675,7 @@ export default function Home() {
                   <span className="cell-mod">{"createdOn" in item ? formatMod((item as FileItem).createdOn) : "—"}</span>
                   <div className="actions">
                     {!isFolder && (
-                      <button className="icon-btn" onClick={(e) => { e.stopPropagation(); handleGetSasUrl(item.name); }} title="Copy link" dangerouslySetInnerHTML={{ __html: S.link }} />
+                      <button className="icon-btn" onClick={(e) => { e.stopPropagation(); const rect = (e.target as HTMLElement).closest('button')!.getBoundingClientRect(); setLinkPopover({ blobName: item.name, fullName: prefix + item.name, x: rect.left - 176, y: rect.bottom + 4 }); }} title="Copy link" dangerouslySetInnerHTML={{ __html: S.link }} />
                     )}
                     <button className="icon-btn danger-hover" onClick={(e) => { e.stopPropagation(); isFolder ? requestDeleteFolder(item.name) : requestDeleteFile(item.name); }} title="Delete" dangerouslySetInnerHTML={{ __html: S.trash }} />
                   </div>
@@ -813,6 +832,22 @@ export default function Home() {
                   Delete
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Link popover */}
+        {linkPopover && (
+          <div className="m-backdrop" style={{ display: "flex", background: "transparent", zIndex: 70 }} onClick={() => setLinkPopover(null)}>
+            <div className="link-popover" style={{ left: linkPopover.x, top: linkPopover.y, position: "fixed" }} onClick={(e) => e.stopPropagation()}>
+              <button onClick={() => { handleCopyDirectUrl(linkPopover.blobName, linkPopover.fullName); setLinkPopover(null); }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                Direct URL (no SAS)
+              </button>
+              <button onClick={() => { handleCopySasUrl(linkPopover.blobName, linkPopover.fullName); setLinkPopover(null); }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 11a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>
+                SAS link (expires 10yr)
+              </button>
             </div>
           </div>
         )}
